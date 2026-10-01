@@ -111,6 +111,11 @@ td.subj{white-space:normal;min-width:260px;max-width:380px}
 td.subj small{display:block;color:var(--muted);font-size:12px}
 tfoot td{font-weight:700;border-bottom:0;background:var(--blue-light)}
 .empty{color:var(--muted);padding:18px}
+.ab-verdict{margin:0 0 14px;font-size:15px}
+.ab-verdict strong{font-weight:700}
+.ab-verdict .muted{color:var(--muted);font-size:13px;display:block;margin-top:2px}
+#ab table{min-width:560px}
+tr.lead td:first-child{font-weight:700;color:var(--blue-dark)}
 .err{color:#b91c1c}
 </style>
 </head>
@@ -147,6 +152,12 @@ tfoot td{font-weight:700;border-bottom:0;background:var(--blue-light)}
         <div class="legend"><span><i class="sw bar"></i>Dépense</span><span><i class="sw line"></i>CPL Meta</span></div></div>
       <div class="box"><canvas id="c-meta" aria-label="Dépense et CPL Meta par jour"></canvas></div>
     </div>
+  </section>
+
+  <section aria-labelledby="h-ab" id="ab-section" hidden>
+    <h2 id="h-ab">A/B test page d'inscription<span class="sub">source PostHog</span></h2>
+    <div class="ab-verdict" id="ab-verdict"></div>
+    <div class="table" id="ab"></div>
   </section>
 
   <section aria-labelledby="h-mail">
@@ -199,7 +210,7 @@ function render(d){
   (d.errors||[]).forEach(e=>notes.push('Erreur : '+e));
   (d.warnings||[]).forEach(w=>notes.push(w));
   document.getElementById('notice').innerHTML=notes.map(esc).join('<br>');
-  renderSignups(d.signups); renderMeta(d.meta); renderEmails(d.emails);
+  renderSignups(d.signups); renderMeta(d.meta); renderAb(d.abtest); renderEmails(d.emails);
 }
 
 function renderSignups(s){
@@ -254,6 +265,24 @@ function renderEmails(list){
   ${list.map(e=>`<tr><td>${e.number!=null?'n°'+e.number:esc(e.name)}</td><td class="subj">${esc(e.subject||'—')}<small>${esc(e.name)} · ${new Date(e.sentAt).toLocaleDateString('fr-FR',{day:'numeric',month:'short'})}</small></td>
     <td>${int(e.sent)}</td><td>${int(e.delivered)}</td><td>${pct(e.deliverability)}</td><td>${pct(e.openRate)}</td><td>${pct(e.clickRate)}</td><td>${e.signups==null?'—':int(e.signups)}</td></tr>`).join('')}
   </tbody><tfoot><tr><td>Total</td><td>${list.length} emails · taux moyens pondérés</td><td>${int(t.sent)}</td><td>${int(t.del)}</td><td>${pct(t.sent?t.del/t.sent:null)}</td><td>${pct(t.del?t.op/t.del:null)}</td><td>${pct(t.del?t.cl/t.del:null)}</td><td>${int(t.sig)}</td></tr></tfoot></table>`;
+}
+
+function renderAb(ab){
+  const sec=document.getElementById('ab-section');
+  if(ab===undefined){sec.hidden=true;return}
+  sec.hidden=false;
+  const el=document.getElementById('ab'), v=document.getElementById('ab-verdict');
+  if(!ab||!ab.variants.length){v.textContent='';el.innerHTML='<div class="empty">Pas encore de données PostHog sur la période.</div>';return}
+  const t=ab.test;
+  if(t&&t.leader){
+    const up=t.uplift==null?'':` (${t.uplift>=0?'+':''}${pct(t.uplift)} pour B vs A)`;
+    v.innerHTML=t.significant
+      ?`<strong>La variante ${t.leader} convertit mieux${esc(up)}</strong>, écart statistiquement fiable.<span class="muted">p = ${t.pValue.toFixed(3)} : moins de 5 % de chances que l'écart soit dû au hasard.</span>`
+      :`<strong>Pas encore de gagnant</strong> : ${t.leader} est devant${esc(up)} mais l'écart peut encore être dû au hasard.<span class="muted">p = ${t.pValue.toFixed(3)} : il faut descendre sous 0,05 pour conclure.</span>`;
+  } else v.textContent='';
+  el.innerHTML=`<table><thead><tr><th>Variante</th><th>Visites</th><th>Inscriptions</th><th>Taux de conversion</th></tr></thead><tbody>
+  ${ab.variants.map(x=>`<tr class="${t&&t.significant&&t.leader===x.variant?'lead':''}"><td>Variante ${esc(x.variant)}</td><td>${int(x.visits)}</td><td>${int(x.signups)}</td><td>${pct(x.rate)}</td></tr>`).join('')}
+  </tbody></table>`;
 }
 
 const CID=new URLSearchParams(location.search).get('c')||'';
