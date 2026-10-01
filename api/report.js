@@ -43,23 +43,40 @@ async function getSignups(suffix) {
 
   const counts = await Promise.all(parsed.map(p => ac(`/contacts?tagid=${p.id}&limit=1`).then(j => Number(j.meta?.total || 0))));
 
+  // Réaffectations : TAG_OVERRIDES="<nom du tag>|<canal cible>|<sous-source>|<canal à déduire>;..."
+  const overrides = (env.TAG_OVERRIDES || '').split(';').map(r => r.split('|').map(x => x.trim()))
+    .filter(r => r[0] && r[1]).map(([tag, to, name, from]) => ({ tag: tag.toLowerCase(), to: to.toUpperCase(), name, from: from ? from.toUpperCase() : null }));
+
   let totalTag = null;
   const ch = {};
+  const get = k => (ch[k] ??= { global: null, sources: {}, extra: {} });
+  const moved = [];
   parsed.forEach((p, i) => {
+    const ov = overrides.find(o => o.tag === p.tag.trim().toLowerCase());
+    if (ov) { moved.push({ ov, count: counts[i], fallback: p.source || p.channel }); return; }
     if (p.channel === 'TOTAL') { if (!p.source) totalTag = counts[i]; return; }
-    ch[p.channel] ??= { global: null, sources: {} };
-    if (p.source) ch[p.channel].sources[p.source] = (ch[p.channel].sources[p.source] || 0) + counts[i];
-    else ch[p.channel].global = counts[i];
+    const c = get(p.channel);
+    if (p.source) c.sources[p.source] = (c.sources[p.source] || 0) + counts[i];
+    else c.global = counts[i];
+  });
+  moved.forEach(({ ov, count, fallback }) => {
+    const name = ov.name || fallback;
+    const t = get(ov.to);
+    t.extra[name] = (t.extra[name] || 0) + count;
+    if (ov.from && ch[ov.from]?.global != null) ch[ov.from].global = Math.max(ch[ov.from].global - count, 0);
   });
 
   const channels = Object.entries(ch).map(([key, c]) => {
     const sources = Object.entries(c.sources).map(([name, count]) => ({ name: pretty(name), key: normKey(name), count }));
+    const extras = Object.entries(c.extra).map(([name, count]) => ({ name: pretty(name), key: normKey(name), count }));
     const sum = sources.reduce((a, s) => a + s.count, 0);
-    const total = c.global ?? sum;
+    const extraSum = extras.reduce((a, s) => a + s.count, 0);
+    const total = (c.global ?? sum) + extraSum;
     if (c.global != null && c.global - sum > 0) sources.push({ name: 'Sans sous-source', key: '', count: c.global - sum, rest: true });
+    sources.push(...extras);
     sources.sort((a, b) => (a.rest ? 1 : b.rest ? -1 : b.count - a.count));
     return { key, label: CHANNEL_LABELS[key] || pretty(key), total, sources };
-  }).sort((a, b) => b.total - a.total);
+  }).filter(c => c.total > 0).sort((a, b) => b.total - a.total);
 
   const sumChannels = channels.reduce((a, c) => a + c.total, 0);
   return { total: totalTag ?? sumChannels, totalFromTag: totalTag != null, channels };
