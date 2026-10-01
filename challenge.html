@@ -207,6 +207,7 @@ function render(d){
   btn.dataset.mode=live?'refresh':'freeze'; btn.classList.toggle('ghost',!live&&d.frozen);
   document.getElementById('stamp').textContent=live?'Mis à jour à '+hm:(d.frozen?`Données figées le ${day} à ${hm}`:`Calculé à ${hm} · pas encore figé`);
   const notes=[];
+    if(d.notStarted) notes.push(`L'acquisition démarre le ${dlong(c.startDate)} : le dashboard se remplira à partir de cette date.`);
   (d.errors||[]).forEach(e=>notes.push('Erreur : '+e));
   (d.warnings||[]).forEach(w=>notes.push(w));
   document.getElementById('notice').innerHTML=notes.map(esc).join('<br>');
