@@ -197,6 +197,7 @@ function render(d){
   document.getElementById('stamp').textContent=live?'Mis à jour à '+hm:(d.frozen?`Données figées le ${day} à ${hm}`:`Calculé à ${hm} · pas encore figé`);
   const notes=[];
   (d.errors||[]).forEach(e=>notes.push('Erreur : '+e));
+  (d.warnings||[]).forEach(w=>notes.push(w));
   document.getElementById('notice').innerHTML=notes.map(esc).join('<br>');
   renderSignups(d.signups); renderMeta(d.meta); renderEmails(d.emails);
 }
@@ -223,7 +224,8 @@ function renderMeta(m){
   set('k-cplr',eur(m.cplReel));
   const gap=m.cplReel&&m.cplMeta?(m.cplReel/m.cplMeta-1):null;
   set('k-cplr-d',`${int(m.signupsAC)} inscrits Meta dans ActiveCampaign`+(gap!=null?` · ${gap>=0?'+':''}${pct(gap)} vs CPL Meta`:''));
-  set('meta-sub',m.accounts?.length?`${m.accounts.length} comptes`:'');
+  const act=(m.accounts||[]).filter(a=>!a.inactive&&!a.failed).length;
+  set('meta-sub',m.accounts?.length?`${act} compte${act>1?'s':''} actif${act>1?'s':''} sur ${m.accounts.length}`:'');
   drawCharts(m.daily);
 }
 
