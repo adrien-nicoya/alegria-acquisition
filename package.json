@@ -2,5 +2,6 @@
   "name": "alegria-acquisition",
   "private": true,
   "type": "module",
-  "engines": { "node": ">=20" }
+  "engines": { "node": ">=20" },
+  "dependencies": { "@vercel/blob": "^1.0.0" }
 }

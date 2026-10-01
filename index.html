@@ -3,259 +3,109 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Acquisition — Challenge Alegria</title>
+<title>Challenges — Acquisition Alegria</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
 :root{
   --paper:#f6f8fc; --surface:#ffffff; --ink:#0f1a3d; --muted:#5d6885; --line:#dfe5f1;
-  --blue:#3b82f6; --blue-dark:#1e40af; --blue-light:#eff6ff;
-  --c-meta:#2563eb; --c-organique:#0d9488; --c-email:#d97706; --c-youtube:#dc2626; --c-affiliation:#7c3aed; --c-other:#94a3b8;
-  --warn-bg:#fff7e6; --warn-ink:#7a4b00;
-  color-scheme:light;
-  box-sizing:border-box;
+  --blue:#3b82f6; --blue-dark:#1e40af; --blue-light:#eff6ff; --live:#16a34a; --live-bg:#e8f7ee; --todo-bg:#fff4e0; --todo:#a35c00;
+  color-scheme:light; box-sizing:border-box;
   padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
 }
 @media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
   --paper:#0c1430; --surface:#131d40; --ink:#e8edfb; --muted:#9aa6c6; --line:#26325c;
-  --blue:#60a5fa; --blue-dark:#93c5fd; --blue-light:#1a2752;
-  --warn-bg:#3a2a07; --warn-ink:#ffd58a; color-scheme:dark;
+  --blue:#60a5fa; --blue-dark:#93c5fd; --blue-light:#1a2752; --live:#4ade80; --live-bg:#12331f; --todo-bg:#3a2a07; --todo:#ffd58a; color-scheme:dark;
 }}
 :root[data-theme="dark"]{
   --paper:#0c1430; --surface:#131d40; --ink:#e8edfb; --muted:#9aa6c6; --line:#26325c;
-  --blue:#60a5fa; --blue-dark:#93c5fd; --blue-light:#1a2752;
-  --warn-bg:#3a2a07; --warn-ink:#ffd58a; color-scheme:dark;
+  --blue:#60a5fa; --blue-dark:#93c5fd; --blue-light:#1a2752; --live:#4ade80; --live-bg:#12331f; --todo-bg:#3a2a07; --todo:#ffd58a; color-scheme:dark;
 }
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 *,*::before,*::after{box-sizing:border-box}
 body{margin:0;background:var(--paper);color:var(--ink);font-family:"Instrument Sans",system-ui,-apple-system,"Segoe UI",sans-serif;font-size:15px;line-height:1.45;font-variant-numeric:tabular-nums}
 .wrap{max-width:1180px;margin:0 auto;padding:28px 24px 64px}
-header{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;justify-content:space-between;padding-bottom:20px;border-bottom:1px solid var(--line)}
+header{padding-bottom:20px;border-bottom:1px solid var(--line)}
 .brand{color:var(--blue);font-weight:600;font-size:14px;margin:0 0 4px}
 h1{margin:0;font-size:28px;font-weight:700;letter-spacing:-.01em}
-.period{color:var(--muted);font-size:14px;margin-top:4px}
-.refresh{display:flex;align-items:center;gap:14px}
-.stamp{color:var(--muted);font-size:13px;text-align:right}
-button{font:inherit;font-weight:600;font-size:14px;color:#fff;background:var(--blue-dark);border:0;border-radius:8px;padding:10px 16px;cursor:pointer;display:inline-flex;gap:8px;align-items:center}
-:root[data-theme="dark"] button{color:#0c1430}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) button{color:#0c1430}}
-button:disabled{opacity:.6;cursor:progress}
-button:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
-.spin{width:14px;height:14px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;display:none;animation:r .8s linear infinite}
-button:disabled .spin{display:inline-block}
-@keyframes r{to{transform:rotate(360deg)}}
-@media (prefers-reduced-motion:reduce){.spin{animation:none}}
-.notice{margin-top:18px;padding:12px 16px;border-radius:8px;background:var(--warn-bg);color:var(--warn-ink);font-size:14px}
+.notice{margin-top:18px;padding:12px 16px;border-radius:8px;background:var(--todo-bg);color:var(--todo);font-size:14px}
 .notice:empty{display:none}
-section{margin-top:40px}
-h2{font-size:19px;font-weight:700;margin:0 0 16px;letter-spacing:-.005em}
-.sub{color:var(--muted);font-weight:500;font-size:14px;margin-left:8px}
-
-/* Inscrits */
-.total{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
-.total .n{font-size:68px;font-weight:700;line-height:1;letter-spacing:-.03em}
-.total .l{color:var(--muted);font-size:16px}
-.mix{display:flex;height:18px;border-radius:5px;overflow:hidden;margin:22px 0 26px;background:var(--line)}
-.mix span{display:block;height:100%}
-.mix span+span{box-shadow:inset 2px 0 0 var(--paper)}
-.channels{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:0;border-top:1px solid var(--line)}
-.ch{padding:16px 18px 6px 0}
-.ch+.ch{padding-left:18px;border-left:1px solid var(--line)}
-.ch-head{display:flex;align-items:center;gap:8px;font-weight:600}
-.dot{width:10px;height:10px;border-radius:3px;flex:none}
-.ch-n{font-size:28px;font-weight:700;margin:6px 0 2px;letter-spacing:-.01em}
-.ch-p{color:var(--muted);font-size:13px}
-.src{list-style:none;margin:12px 0 0;padding:0;font-size:14px}
-.src li{display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-top:1px dashed var(--line)}
-.src li.rest{color:var(--muted)}
-@media (max-width:640px){.ch+.ch{padding-left:0;border-left:0;border-top:1px solid var(--line)}.total .n{font-size:52px}}
-
-/* Meta */
-.kpis{display:grid;grid-template-columns:1fr 1fr 1.2fr;background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden}
-.kpi{padding:18px 22px}
-.kpi+.kpi{border-left:1px solid var(--line)}
-.kpi .k{color:var(--muted);font-size:14px}
-.kpi .v{font-size:32px;font-weight:700;margin-top:4px;letter-spacing:-.01em}
-.kpi .d{color:var(--muted);font-size:13px;margin-top:2px}
-.kpi.real{background:var(--blue-dark);color:#fff}
-.kpi.real .k,.kpi.real .d{color:#c7d6ff}
-:root[data-theme="dark"] .kpi.real{background:#1e3a8a}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .kpi.real{background:#1e3a8a}}
-@media (max-width:760px){.kpis{grid-template-columns:1fr}.kpi+.kpi{border-left:0;border-top:1px solid var(--line)}}
-.chart{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin-top:16px}
-.chart-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px}
-.chart h3{margin:0;font-size:15px;font-weight:600}
-.legend{display:flex;gap:16px;color:var(--muted);font-size:13px}
-.legend span{display:inline-flex;align-items:center;gap:6px}
-.sw{display:inline-block}
-.sw.bar{width:12px;height:12px;border-radius:3px;background:var(--blue)}
-.sw.line{width:16px;height:3px;border-radius:2px;background:var(--ink)}
-.chart .box{position:relative;height:300px}
-
-/* Emailing */
-.table{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:10px}
-table{width:100%;border-collapse:collapse;font-size:14px;min-width:820px}
-th,td{padding:11px 14px;text-align:right;white-space:nowrap}
-th{font-weight:600;color:var(--muted);border-bottom:1px solid var(--line);font-size:13px}
-td{border-bottom:1px solid var(--line)}
-th:nth-child(-n+2),td:nth-child(-n+2){text-align:left}
-td.subj{white-space:normal;min-width:260px;max-width:380px}
-td.subj small{display:block;color:var(--muted);font-size:12px}
-tfoot td{font-weight:700;border-bottom:0;background:var(--blue-light)}
-.empty{color:var(--muted);padding:18px}
-.err{color:#b91c1c}
+.list{margin-top:28px;background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.row{display:grid;grid-template-columns:minmax(220px,1.6fr) repeat(3,minmax(110px,1fr));gap:16px;align-items:center;padding:20px 22px;color:inherit;text-decoration:none}
+.row+.row{border-top:1px solid var(--line)}
+.row:hover{background:var(--blue-light)}
+.row:focus-visible{outline:3px solid var(--blue);outline-offset:-3px}
+.name{font-size:18px;font-weight:700}
+.meta{display:flex;gap:10px;align-items:center;margin-top:4px;color:var(--muted);font-size:13px;flex-wrap:wrap}
+.chip{font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--blue-light);color:var(--blue-dark)}
+.chip.live{background:var(--live-bg);color:var(--live)}
+.chip.todo{background:var(--todo-bg);color:var(--todo)}
+.chip.live::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:currentColor;margin-right:6px;vertical-align:1px}
+.stat .k{color:var(--muted);font-size:13px}
+.stat .v{font-size:22px;font-weight:700;letter-spacing:-.01em}
+.head{padding:12px 22px;color:var(--muted);font-size:13px;font-weight:600;border-bottom:1px solid var(--line)}
+.head .stat-h{text-align:left}
+@media (max-width:760px){.row{grid-template-columns:1fr 1fr 1fr}.row>div:first-child{grid-column:1/-1}.head{display:none}.stat .v{font-size:18px}}
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
-    <div>
-      <p class="brand">Alegria · Acquisition</p>
-      <h1 id="title">Challenge</h1>
-    </div>
-    <div class="refresh">
-      <div class="stamp" id="stamp">Chargement…</div>
-      <button id="btn" type="button"><span class="spin"></span>Mettre à jour</button>
-    </div>
+    <p class="brand">Alegria · Acquisition</p>
+    <h1>Challenges</h1>
   </header>
   <div class="notice" id="notice"></div>
-
-  <section aria-labelledby="h-ins">
-    <h2 id="h-ins">Inscrits</h2>
-    <div class="total"><span class="n" id="total">–</span></div>
-    <div class="mix" id="mix"></div>
-    <div class="channels" id="channels"></div>
-  </section>
-
-  <section aria-labelledby="h-meta">
-    <h2 id="h-meta">Publicités Meta<span class="sub" id="meta-sub"></span></h2>
-    <div class="kpis">
-      <div class="kpi"><div class="k">Dépensé</div><div class="v" id="k-spend">–</div><div class="d" id="k-spend-d"></div></div>
-      <div class="kpi"><div class="k">CPL Meta</div><div class="v" id="k-cplm">–</div><div class="d" id="k-cplm-d"></div></div>
-      <div class="kpi real"><div class="k">CPL réel</div><div class="v" id="k-cplr">–</div><div class="d" id="k-cplr-d"></div></div>
-    </div>
-    <div class="chart">
-      <div class="chart-head"><h3>Dépense et CPL Meta par jour</h3>
-        <div class="legend"><span><i class="sw bar"></i>Dépense</span><span><i class="sw line"></i>CPL Meta</span></div></div>
-      <div class="box"><canvas id="c-meta" aria-label="Dépense et CPL Meta par jour"></canvas></div>
-    </div>
-  </section>
-
-  <section aria-labelledby="h-mail">
-    <h2 id="h-mail">Emailing</h2>
-    <div class="table" id="emails"></div>
-  </section>
+  <div class="list" id="list" aria-busy="true"><div class="row"><div class="meta">Chargement…</div></div></div>
 </div>
-
 <script>
-const COLORS={META:'--c-meta',ORGANIQUE:'--c-organique',EMAIL:'--c-email',YOUTUBE:'--c-youtube',AFFILIATION:'--c-affiliation'};
-const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
 const nf=new Intl.NumberFormat('fr-FR');
 const eur=(n,d=2)=>n==null?'–':n.toLocaleString('fr-FR',{style:'currency',currency:'EUR',minimumFractionDigits:d,maximumFractionDigits:d});
-const pct=n=>n==null?'–':(n*100).toLocaleString('fr-FR',{minimumFractionDigits:1,maximumFractionDigits:1})+' %';
 const int=n=>n==null?'–':nf.format(n);
-const dshort=s=>new Date(s+'T12:00:00').toLocaleDateString('fr-FR',{day:'numeric',month:'short'});
-const dlong=s=>new Date(s+'T12:00:00').toLocaleDateString('fr-FR',{day:'numeric',month:'long'});
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-let charts={};
+const dd=s=>new Date(s+'T12:00:00').toLocaleDateString('fr-FR',{day:'numeric',month:'long'});
 
-/* Données d'aperçu : tags de septembre réels (capture), Meta et emailing fictifs */
-const DEMO=(()=>{
-  const days=['2026-08-27','2026-08-28','2026-08-29','2026-08-30','2026-08-31','2026-09-01','2026-09-02','2026-09-03','2026-09-04','2026-09-05'];
-  const sp=[3120,4480,5210,5640,6020,6390,6810,7350,7920,5860], ld=[2010,2680,2950,3010,3120,3260,3390,3480,3610,2540];
-  const daily=days.map((d,i)=>({date:d,spend:sp[i],leads:ld[i],cpl:sp[i]/ld[i]}));
-  const spend=sp.reduce((a,b)=>a+b,0), leads=ld.reduce((a,b)=>a+b,0);
-  return {demo:true,generatedAt:new Date().toISOString(),
-    challenge:{name:'Challenge Septembre 2026',suffix:'06092026',startDate:'2026-08-27',until:'2026-09-05'},
-    signups:{total:37410,totalFromTag:false,channels:[
-      {key:'META',label:'Meta',total:29658,sources:[{name:'Matthias',count:5603},{name:'Mac',count:3763},{name:'Carlos',count:1017},{name:'Delphine',count:707},{name:'Sans sous-source',count:18568,rest:true}]},
-      {key:'ORGANIQUE',label:'Organique',total:3341,sources:[{name:'Matthias',count:124},{name:'Delphine',count:1},{name:'Di',count:1},{name:'Sans sous-source',count:3215,rest:true}]},
-      {key:'EMAIL',label:'Emailing',total:3345,sources:[{name:'Sans sous-source',count:3345,rest:true}]},
-      {key:'AFFILIATION',label:'Affiliation',total:1066,sources:[{name:'Delphine',count:826},{name:'Sébastien',count:233},{name:'David',count:7}]}]},
-    meta:{spend,leads,cplMeta:spend/leads,signupsAC:29658,cplReel:spend/29658,accounts:[],daily},
-    emails:[6,7,8,10].map((n,i)=>{const sent=[111603,109072,108416,106891][i],del=Math.round(sent*(.985-i*.003));
-      return {name:'INV #'+n,number:n,subject:['Ce soir on commence','Plus que 48 h','Votre place est réservée','Dernier rappel avant le live'][i],sentAt:'2026-0'+(i<3?'8-2':'9-0')+(i<3?7+i:3)+'T15:00:00',sent,delivered:del,deliverability:del/sent,openRate:[.312,.288,.276,.301][i],clickRate:[.041,.036,.033,.044][i],signups:[612,488,402,705][i]}}),
-    errors:[]};
-})();
+const DEMO={demo:true,challenges:[
+  {id:'octobre-2026',name:'Challenge Octobre 2026',startDate:'2026-10-08',endDate:'2026-10-20',status:'live',summary:{total:null,spend:null,cplReel:null}},
+  {id:'septembre-2026',name:'Challenge Septembre 2026',startDate:'2026-08-21',endDate:'2026-09-08',status:'done',frozen:true,frozenAt:'2026-10-01T11:40:00Z',summary:{total:37410,spend:58800,cplReel:1.98}},
+  {id:'juillet-2026',name:'Challenge Juillet 2026',startDate:'2026-07-10',endDate:'2026-07-20',status:'done',frozen:false,summary:null}]};
 
-function render(d){
-  const c=d.challenge||{};
-  document.getElementById('title').textContent=c.name||'Challenge';
-  document.getElementById('stamp').textContent='Mis à jour à '+new Date(d.generatedAt).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
-  const notes=[];
-  (d.errors||[]).forEach(e=>notes.push('Erreur : '+e));
-  document.getElementById('notice').innerHTML=notes.map(esc).join('<br>');
-  renderSignups(d.signups); renderMeta(d.meta); renderEmails(d.emails);
+function row(c){
+  const s=c.summary||{};
+  const chip=c.status==='live'?'<span class="chip live">En cours · temps réel</span>'
+    :c.frozen?`<span class="chip">Figé le ${new Date(c.frozenAt).toLocaleDateString('fr-FR',{day:'numeric',month:'short'})}</span>`
+    :'<span class="chip todo">À figer</span>';
+  return `<a class="row" href="/challenge.html?c=${encodeURIComponent(c.id)}" data-id="${esc(c.id)}">
+    <div><div class="name">${esc(c.name)}</div><div class="meta">Du ${dd(c.startDate)} au ${dd(c.endDate)} ${chip}</div></div>
+    <div class="stat"><div class="k">Inscrits</div><div class="v" data-f="total">${int(s.total)}</div></div>
+    <div class="stat"><div class="k">Dépense Meta</div><div class="v" data-f="spend">${eur(s.spend,0)}</div></div>
+    <div class="stat"><div class="k">CPL réel</div><div class="v" data-f="cplReel">${eur(s.cplReel)}</div></div>
+  </a>`;
 }
 
-function renderSignups(s){
-  if(!s){document.getElementById('total').textContent='–';return}
-  document.getElementById('total').textContent=int(s.total);
-  const sum=s.channels.reduce((a,c)=>a+c.total,0)||1;
-  document.getElementById('mix').innerHTML=s.channels.map(c=>`<span title="${esc(c.label)} : ${int(c.total)}" style="width:${c.total/sum*100}%;background:var(${COLORS[c.key]||'--c-other'})"></span>`).join('');
-  document.getElementById('channels').innerHTML=s.channels.map(c=>`
-    <div class="ch">
-      <div class="ch-head"><span class="dot" style="background:var(${COLORS[c.key]||'--c-other'})"></span>${esc(c.label)}</div>
-      <div class="ch-n">${int(c.total)}</div>
-      <div class="ch-p">${pct(c.total/sum)} des inscrits</div>
-      ${c.sources.length?`<ul class="src">${c.sources.map(x=>`<li class="${x.rest?'rest':''}"><span>${esc(x.name)}</span><span>${int(x.count)}</span></li>`).join('')}</ul>`:''}
-    </div>`).join('');
-}
-
-function renderMeta(m){
-  const set=(id,v)=>document.getElementById(id).textContent=v;
-  if(!m){['k-spend','k-cplm','k-cplr'].forEach(i=>set(i,'–'));return}
-  set('k-spend',eur(m.spend,0)); set('k-spend-d',m.daily.length?`${m.daily.length} jours de diffusion`:'');
-  set('k-cplm',eur(m.cplMeta)); set('k-cplm-d',`${int(m.leads)} leads déclarés par Meta`);
-  set('k-cplr',eur(m.cplReel));
-  const gap=m.cplReel&&m.cplMeta?(m.cplReel/m.cplMeta-1):null;
-  set('k-cplr-d',`${int(m.signupsAC)} inscrits Meta dans ActiveCampaign`+(gap!=null?` · ${gap>=0?'+':''}${pct(gap)} vs CPL Meta`:''));
-  set('meta-sub',m.accounts?.length?`${m.accounts.length} comptes`:'');
-  drawCharts(m.daily);
-}
-
-function drawCharts(daily){
-  if(!window.Chart) return;
-  const labels=daily.map(x=>dshort(x.date)), grid=css('--line'), tick=css('--muted'), blue=css('--blue'), ink=css('--ink');
-  const font={family:'Instrument Sans'};
-  Object.values(charts).forEach(c=>c.destroy()); charts={};
-  charts.meta=new Chart(document.getElementById('c-meta'),{
-    data:{labels,datasets:[
-      {type:'bar',label:'Dépense',data:daily.map(x=>x.spend),backgroundColor:blue,borderRadius:3,maxBarThickness:38,yAxisID:'y',order:2},
-      {type:'line',label:'CPL Meta',data:daily.map(x=>x.cpl),borderColor:ink,backgroundColor:ink,pointRadius:3,borderWidth:2,tension:.25,spanGaps:true,yAxisID:'y1',order:1}]},
-    options:{responsive:true,maintainAspectRatio:false,animation:false,interaction:{mode:'index',intersect:false},
-      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.dataset.label} : ${eur(c.parsed.y,c.dataset.yAxisID==='y'?0:2)}`}}},
-      scales:{x:{grid:{display:false},ticks:{color:tick,font}},
-        y:{position:'left',beginAtZero:true,grid:{color:grid},ticks:{color:tick,font,callback:v=>eur(v,0)},title:{display:true,text:'Dépense',color:tick,font}},
-        y1:{position:'right',beginAtZero:true,grid:{drawOnChartArea:false},ticks:{color:tick,font,callback:v=>eur(v)},title:{display:true,text:'CPL',color:tick,font}}}}});
-}
-
-function renderEmails(list){
-  const el=document.getElementById('emails');
-  if(!list){el.innerHTML='<div class="empty">Statistiques emailing indisponibles.</div>';return}
-  if(!list.length){el.innerHTML='<div class="empty">Aucun email envoyé pour ce challenge pour l’instant.</div>';return}
-  const t=list.reduce((a,e)=>({sent:a.sent+e.sent,del:a.del+e.delivered,sig:a.sig+(e.signups||0)}),{sent:0,del:0,sig:0});
-  el.innerHTML=`<table><thead><tr><th>Email</th><th>Objet</th><th>Envoyés</th><th>Délivrés</th><th>Délivrabilité</th><th>Ouverture</th><th>Clics</th><th>Inscriptions</th></tr></thead><tbody>
-  ${list.map(e=>`<tr><td>${e.number!=null?'n°'+e.number:esc(e.name)}</td><td class="subj">${esc(e.subject||'—')}<small>${esc(e.name)} · ${new Date(e.sentAt).toLocaleDateString('fr-FR',{day:'numeric',month:'short'})}</small></td>
-    <td>${int(e.sent)}</td><td>${int(e.delivered)}</td><td>${pct(e.deliverability)}</td><td>${pct(e.openRate)}</td><td>${pct(e.clickRate)}</td><td>${e.signups==null?'—':int(e.signups)}</td></tr>`).join('')}
-  </tbody><tfoot><tr><td>Total</td><td>${list.length} emails</td><td>${int(t.sent)}</td><td>${int(t.del)}</td><td>${pct(t.sent?t.del/t.sent:null)}</td><td></td><td></td><td>${int(t.sig)}</td></tr></tfoot></table>`;
-}
-
-async function load(){
-  const btn=document.getElementById('btn'); btn.disabled=true;
-  document.getElementById('stamp').textContent='Mise à jour…';
+async function fillLive(c){
   try{
-    const r=await fetch('/api/report',{cache:'no-store'});
-    const type=r.headers.get('content-type')||'';
-    if(!type.includes('application/json')) throw new Error('no-api');
-    render(await r.json());
-  }catch(e){ render(DEMO); }
-  finally{ btn.disabled=false; }
+    const r=await fetch('/api/report?c='+encodeURIComponent(c.id),{cache:'no-store'});
+    const d=await r.json(); const el=document.querySelector(`[data-id="${CSS.escape(c.id)}"]`);
+    el.querySelector('[data-f="total"]').textContent=int(d.signups?.total);
+    el.querySelector('[data-f="spend"]').textContent=eur(d.meta?.spend,0);
+    el.querySelector('[data-f="cplReel"]').textContent=eur(d.meta?.cplReel);
+  }catch(e){}
 }
-document.getElementById('btn').addEventListener('click',load);
-load();
+
+(async()=>{
+  let data;
+  try{
+    const r=await fetch('/api/challenges',{cache:'no-store'});
+    if(!(r.headers.get('content-type')||'').includes('application/json')) throw 0;
+    data=await r.json();
+  }catch(e){ data=DEMO; }
+  const list=document.getElementById('list');
+  list.innerHTML=data.challenges.map(row).join(''); list.removeAttribute('aria-busy');
+  if(!data.demo) data.challenges.filter(c=>c.status==='live'||!c.frozen).forEach(fillLive);
+  const todo=data.challenges.filter(c=>c.status!=='live'&&!c.frozen).length;
+  if(todo&&!data.demo) document.getElementById('notice').textContent=`${todo} challenge${todo>1?'s':''} terminé${todo>1?'s':''} pas encore figé${todo>1?'s':''} : ouvre-le et clique sur « Figer les données ».`;
+})();
 </script>
 </body>
 </html>
