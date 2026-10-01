@@ -1,0 +1,6 @@
+{
+  "name": "alegria-acquisition",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=20" }
+}
