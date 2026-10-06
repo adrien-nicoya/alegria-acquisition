@@ -1,17 +1,14 @@
-// Cron horaire : à minuit (Paris), enregistre les totaux d'inscrits de la journée écoulée pour le challenge en cours.
+// Cron quotidien (22h UTC = minuit à Paris en heure d'été) : enregistre les totaux d'inscrits de la journée écoulée pour le challenge en cours.
 import challenges from '../lib/challenges.js';
 import { getSignups } from '../lib/compute.js';
 import { saveDaily } from '../lib/store.js';
 
 export const config = { maxDuration: 60 };
-const paris = (d, opts) => new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Paris', ...opts }).format(d);
+const paris = d => new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Paris' }).format(d);
 
 export default async function handler(req, res) {
   if (req.headers.authorization !== `Bearer ${process.env.CRON_SECRET}`) return res.status(401).end();
   const now = new Date();
-  const force = new URL(req.url, 'http://x').searchParams.has('force');
-  if (!force && Number(paris(now, { hour: 'numeric', hour12: false })) % 24 !== 0) return res.status(200).json({ skipped: true });
-
   const day = paris(new Date(now.getTime() - 30 * 60e3)); // journée qui vient de se terminer
   const live = challenges.filter(c => c.status === 'live' && day >= c.startDate && day <= c.endDate);
   const out = [];
