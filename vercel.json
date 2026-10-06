@@ -1,6 +1,8 @@
 {
   "functions": {
     "api/report.js": { "maxDuration": 60 },
-    "api/freeze.js": { "maxDuration": 60 }
-  }
+    "api/freeze.js": { "maxDuration": 60 },
+    "api/snapshot.js": { "maxDuration": 60 }
+  },
+  "crons": [{ "path": "/api/snapshot", "schedule": "0 * * * *" }]
 }

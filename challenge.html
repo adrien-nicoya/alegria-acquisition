@@ -148,8 +148,8 @@ tr.lead td:first-child{font-weight:700;color:var(--blue-dark)}
       <div class="kpi real"><div class="k">CPL réel</div><div class="v" id="k-cplr">–</div><div class="d" id="k-cplr-d"></div></div>
     </div>
     <div class="chart">
-      <div class="chart-head"><h3>Dépense et CPL Meta par jour</h3>
-        <div class="legend"><span><i class="sw bar"></i>Dépense</span><span><i class="sw line"></i>CPL Meta</span></div></div>
+      <div class="chart-head"><h3 id="chart-title">Dépense et CPL réel par jour</h3>
+        <div class="legend"><span><i class="sw bar"></i>Dépense</span><span><i class="sw line"></i><span id="line-label">CPL réel</span></span></div></div>
       <div class="box"><canvas id="c-meta" aria-label="Dépense et CPL Meta par jour"></canvas></div>
     </div>
   </section>
@@ -246,12 +246,16 @@ function drawCharts(daily){
   const labels=daily.map(x=>dshort(x.date)), grid=css('--line'), tick=css('--muted'), blue=css('--blue'), ink=css('--ink');
   const font={family:'Instrument Sans'};
   Object.values(charts).forEach(c=>c.destroy()); charts={};
+  const real=daily.some(x=>x.cplReel!=null), lineLabel=real?'CPL réel':'CPL Meta';
+  document.getElementById('line-label').textContent=lineLabel;
+  document.getElementById('chart-title').textContent=`Dépense et ${lineLabel} par jour`;
   charts.meta=new Chart(document.getElementById('c-meta'),{
     data:{labels,datasets:[
       {type:'bar',label:'Dépense',data:daily.map(x=>x.spend),backgroundColor:blue,borderRadius:3,maxBarThickness:38,yAxisID:'y',order:2},
-      {type:'line',label:'CPL Meta',data:daily.map(x=>x.cpl),borderColor:ink,backgroundColor:ink,pointRadius:3,borderWidth:2,tension:.25,spanGaps:true,yAxisID:'y1',order:1}]},
+      {type:'line',label:lineLabel,data:daily.map(x=>real?x.cplReel:x.cpl),borderColor:ink,backgroundColor:ink,pointRadius:3,borderWidth:2,tension:.25,spanGaps:true,yAxisID:'y1',order:1}]},
     options:{responsive:true,maintainAspectRatio:false,animation:false,interaction:{mode:'index',intersect:false},
-      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.dataset.label} : ${eur(c.parsed.y,c.dataset.yAxisID==='y'?0:2)}`}}},
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.dataset.label} : ${eur(c.parsed.y,c.dataset.yAxisID==='y'?0:2)}`,
+        afterBody:items=>{const x=daily[items[0].dataIndex];return real&&x.signupsAC!=null?`Inscrits Meta (AC) : ${int(x.signupsAC)}`:''}}}},
       scales:{x:{grid:{display:false},ticks:{color:tick,font}},
         y:{position:'left',beginAtZero:true,grid:{color:grid},ticks:{color:tick,font,callback:v=>eur(v,0)},title:{display:true,text:'Dépense',color:tick,font}},
         y1:{position:'right',beginAtZero:true,grid:{drawOnChartArea:false},ticks:{color:tick,font,callback:v=>eur(v)},title:{display:true,text:'CPL',color:tick,font}}}}});

@@ -1,5 +1,5 @@
 // Protection par mot de passe (active seulement si DASHBOARD_PASSWORD est défini).
-export const config = { matcher: '/((?!_vercel).*)' };
+export const config = { matcher: '/((?!_vercel|api/snapshot).*)' };
 
 export default function middleware(req) {
   const pwd = process.env.DASHBOARD_PASSWORD;
