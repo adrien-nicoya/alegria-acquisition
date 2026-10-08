@@ -15,7 +15,7 @@ export default async function handler(req, res) {
     const snap = await getSnapshot(ch.id).catch(() => null);
     if (snap) {
       const data = applySignupsDaily(applyMetaDaily(applyEmailDaily(snap, ch), ch), ch);
-      data.challenge = { ...data.challenge, targets: ch.targets || null };
+      data.challenge = { ...data.challenge, targets: ch.targets || null, abPages: ch.posthog?.pages || null };
       return res.status(200).json({ ...data, frozen: true });
     }
   }
