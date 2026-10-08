@@ -78,7 +78,8 @@ h2{font-size:19px;font-weight:700;margin:0 0 16px;letter-spacing:-.005em}
 .goal span{display:block;height:100%;border-radius:3px}
 .src{list-style:none;margin:12px 0 0;padding:0;font-size:14px}
 .src li{display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-top:1px dashed var(--line)}
-.src li.rest{color:var(--muted)}
+.src li.sub{padding-left:14px}
+.src li.group{font-weight:600}
 @media (max-width:640px){.ch+.ch{padding-left:0;border-left:0;border-top:1px solid var(--line)}.total .n{font-size:52px}}
 
 /* Meta */
@@ -93,6 +94,8 @@ h2{font-size:19px;font-weight:700;margin:0 0 16px;letter-spacing:-.005em}
 :root[data-theme="dark"] .kpi.real{background:#1e3a8a}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .kpi.real{background:#1e3a8a}}
 @media (max-width:760px){.kpis{grid-template-columns:1fr}.kpi+.kpi{border-left:0;border-top:1px solid var(--line)}}
+body.limited #btn[data-mode="freeze"]{display:none}
+.note{color:var(--muted);font-size:13px;margin:8px 2px 0}
 .chart{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin-top:16px}
 .chart-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px}
 .chart h3{margin:0;font-size:15px;font-weight:600}
@@ -113,6 +116,7 @@ td{border-bottom:1px solid var(--line)}
 th:nth-child(-n+2),td:nth-child(-n+2){text-align:left}
 td.subj{white-space:normal;min-width:260px;max-width:380px}
 td.subj small{display:block;color:var(--muted);font-size:12px}
+td a{color:var(--blue-dark);font-weight:600}
 tfoot td{font-weight:700;border-bottom:0;background:var(--blue-light)}
 .empty{color:var(--muted);padding:18px}
 .ab-verdict{margin:0 0 14px;font-size:15px}
@@ -139,7 +143,7 @@ tr.lead td:first-child{font-weight:700;color:var(--blue-dark)}
 
   <section aria-labelledby="h-ins">
     <h2 id="h-ins">Inscrits</h2>
-    <div class="total"><span class="n" id="total">–</span></div>
+    <div class="total"><span class="n" id="total">–</span><span class="l" id="total-goal"></span></div>
     <div class="mix" id="mix"></div>
     <div class="channels" id="channels"></div>
     <div class="chart" id="signups-chart" hidden>
@@ -156,6 +160,7 @@ tr.lead td:first-child{font-weight:700;color:var(--blue-dark)}
       <div class="kpi"><div class="k">CPL Meta</div><div class="v" id="k-cplm">–</div><div class="d" id="k-cplm-d"></div></div>
       <div class="kpi real"><div class="k">CPL réel</div><div class="v" id="k-cplr">–</div><div class="d" id="k-cplr-d"></div></div>
     </div>
+    <p class="note">Le CPL réel est plus élevé que le CPL Meta car Meta s'attribue à tort des inscrits venus d'autres canaux (emails, organique…).</p>
     <div class="chart">
       <div class="chart-head"><h3 id="chart-title">Dépense et CPL réel par jour</h3>
         <div class="legend"><span><i class="sw bar"></i>Dépense</span><span><i class="sw line"></i><span id="line-label">CPL réel</span></span></div></div>
@@ -220,29 +225,65 @@ function render(d){
   (d.errors||[]).forEach(e=>notes.push('Erreur : '+e));
   (d.warnings||[]).forEach(w=>notes.push(w));
   document.getElementById('notice').innerHTML=notes.map(esc).join('<br>');
-  renderSignups(d.signups,(d.challenge||{}).targets); drawSignups(d.signupsDaily,(d.challenge||{}).targets); renderMeta(d.meta); renderAb(d.abtest); renderEmails(d.emails);
+  EMAILS_BY_NUM=Object.fromEntries((d.emails||[]).filter(e=>e.number!=null).map(e=>[String(e.number),e]));
+  renderSignups(d.signups,(d.challenge||{}).targets); drawSignups(d.signupsDaily,(d.challenge||{}).targets); renderMeta(d.meta); PAGES=(d.challenge||{}).abPages||null; renderAb(d.abtest); renderEmails(d.emails);
+}
+
+const LABELS={META:'Meta',YOUTUBE:'YouTube Ads',ORGANIQUE:'Organique',EMAIL:'Emailing',AFFILIATION:'Affiliation'};
+const CH_ORDER=['META'];
+let EMAILS_BY_NUM={};
+
+// Lignes de sous-sources affichées pour un canal.
+function sourceLines(c){
+  // Hors organique : on masque les lignes à 1 inscrit (tests).
+  let src=c.sources.filter(x=>c.key==='ORGANIQUE'||x.count>1);
+  if(c.key==='META'){
+    const classic=src.filter(x=>x.rest), perso=src.filter(x=>!x.rest);
+    const out=classic.map(x=>({name:'Ads classiques',count:x.count}));
+    if(perso.length){
+      out.push({name:'Ads personnalité',count:perso.reduce((a,x)=>a+x.count,0),cls:'group'});
+      perso.forEach(x=>out.push({name:x.name,count:x.count,cls:'sub'}));
+    }
+    return out;
+  }
+  if(c.key==='EMAIL'){
+    const numbered=src.filter(x=>/^\d+$/.test(x.key||''));
+    if(numbered.length) src=numbered; // sans sous-source / autres = tests
+    return src.map(x=>{
+      if(!/^\d+$/.test(x.key||'')) return x;
+      const e=EMAILS_BY_NUM[x.key];
+      return {name:`Email n°${x.key}`+(e?` · ${new Date(e.sentAt).toLocaleDateString('fr-FR',{day:'numeric',month:'short'})}`:''),count:x.count,num:+x.key};
+    }).sort((a,b)=>(a.num??999)-(b.num??999));
+  }
+  return src;
 }
 
 function renderSignups(s,targets){
-  if(!s){document.getElementById('total').textContent='–';return}
+  const goalEl=document.getElementById('total-goal');
+  if(!s){document.getElementById('total').textContent='–';goalEl.textContent='';return}
   document.getElementById('total').textContent=int(s.total);
-  const sum=s.channels.reduce((a,c)=>a+c.total,0)||1;
-  document.getElementById('mix').innerHTML=s.channels.map(c=>`<span title="${esc(c.label)} : ${int(c.total)}" style="width:${c.total/sum*100}%;background:var(${COLORS[c.key]||'--c-other'})"></span>`).join('');
-  document.getElementById('channels').innerHTML=s.channels.map(c=>`
+  const goal=targets?Object.values(targets).reduce((a,b)=>a+b,0):null;
+  goalEl.textContent=goal?`${pct(s.total/goal)} de l'objectif (${int(goal)})`:'';
+  // Hors organique : un canal à 1 inscrit = test, non affiché.
+  const chans=s.channels.filter(c=>c.key==='ORGANIQUE'||c.total>1)
+    .sort((a,b)=>{const ia=CH_ORDER.indexOf(a.key),ib=CH_ORDER.indexOf(b.key);return (ia<0?99:ia)-(ib<0?99:ib)||b.total-a.total});
+  const sum=chans.reduce((a,c)=>a+c.total,0)||1;
+  document.getElementById('mix').innerHTML=chans.map(c=>`<span title="${esc(LABELS[c.key]||c.label)} : ${int(c.total)}" style="width:${c.total/sum*100}%;background:var(${COLORS[c.key]||'--c-other'})"></span>`).join('');
+  document.getElementById('channels').innerHTML=chans.map(c=>{const lines=sourceLines(c);return `
     <div class="ch">
-      <div class="ch-head"><span class="dot" style="background:var(${COLORS[c.key]||'--c-other'})"></span>${esc(c.label)}</div>
+      <div class="ch-head"><span class="dot" style="background:var(${COLORS[c.key]||'--c-other'})"></span>${esc(LABELS[c.key]||c.label)}</div>
       <div class="ch-n">${int(c.total)}</div>
       ${targets?(targets[c.key]?`<div class="goal"><span style="width:${Math.min(c.total/targets[c.key],1)*100}%;background:var(${COLORS[c.key]||'--c-other'})"></span></div>
       <div class="ch-p">${pct(c.total/targets[c.key])} de l'objectif (${int(targets[c.key])})</div>`:'<div class="ch-p">Sans objectif</div>')
       :`<div class="ch-p">${pct(c.total/sum)} des inscrits</div>`}
-      ${c.sources.length?`<ul class="src">${c.sources.map(x=>`<li class="${x.rest?'rest':''}"><span>${esc(x.name)}</span><span>${int(x.count)}</span></li>`).join('')}</ul>`:''}
-    </div>`).join('');
+      ${lines.length?`<ul class="src">${lines.map(x=>`<li class="${x.cls||''}"><span>${esc(x.name)}</span><span>${int(x.count)}</span></li>`).join('')}</ul>`:''}
+    </div>`}).join('');
 }
 
 function renderMeta(m){
   const set=(id,v)=>document.getElementById(id).textContent=v;
   if(!m){['k-spend','k-cplm','k-cplr'].forEach(i=>set(i,'–'));return}
-  set('k-spend',eur(m.spend,0)); set('k-spend-d',m.daily.length?`${m.daily.length} jours de diffusion`:'');
+  set('k-spend',eur(m.spend,0)); set('k-spend-d',m.daily.length?`${m.daily.length} jour${m.daily.length>1?"s":""} de diffusion`:'');
   set('k-cplm',eur(m.cplMeta)); set('k-cplm-d',`${int(m.leads)} leads déclarés par Meta`);
   set('k-cplr',eur(m.cplReel));
   const gap=m.cplReel&&m.cplMeta?(m.cplReel/m.cplMeta-1):null;
@@ -300,11 +341,12 @@ function renderEmails(list){
   if(!list.length){el.innerHTML='<div class="empty">Aucun email envoyé pour ce challenge pour l’instant.</div>';return}
   const t=list.reduce((a,e)=>({sent:a.sent+e.sent,del:a.del+e.delivered,sig:a.sig+(e.signups||0),op:a.op+(e.uniqueOpens??(e.openRate||0)*e.delivered),cl:a.cl+(e.uniqueClicks??(e.clickRate||0)*e.delivered)}),{sent:0,del:0,sig:0,op:0,cl:0});
   el.innerHTML=`<table><thead><tr><th>Email</th><th>Objet</th><th>Envoyés</th><th>Délivrés</th><th>Délivrabilité</th><th>Ouverture</th><th>Clics</th><th>Inscriptions</th></tr></thead><tbody>
-  ${list.map(e=>`<tr><td>${e.number!=null?'n°'+e.number:esc(e.name)}</td><td class="subj">${esc(e.subject||'—')}<small>${esc(e.name)} · ${new Date(e.sentAt).toLocaleDateString('fr-FR',{day:'numeric',month:'short'})}</small></td>
+  ${list.map(e=>`<tr><td>${e.number!=null?'Email n°'+e.number:esc(e.name)}</td><td class="subj">${esc(e.subject||'—')}<small>${esc(e.name)} · ${new Date(e.sentAt).toLocaleDateString('fr-FR',{day:'numeric',month:'short'})}</small></td>
     <td>${int(e.sent)}</td><td>${int(e.delivered)}</td><td>${pct(e.deliverability)}</td><td>${pct(e.openRate)}</td><td>${pct(e.clickRate)}</td><td${e.sameDay?' title="Même jour qu’un email précédent : inscrits comptés sur ce dernier"':''}>${e.signups==null?(e.sameDay?'↑':'—'):int(e.signups)}</td></tr>`).join('')}
   </tbody><tfoot><tr><td>Total</td><td>${list.length} emails · taux moyens pondérés</td><td>${int(t.sent)}</td><td>${int(t.del)}</td><td>${pct(t.sent?t.del/t.sent:null)}</td><td>${pct(t.del?t.op/t.del:null)}</td><td>${pct(t.del?t.cl/t.del:null)}</td><td>${int(t.sig)}</td></tr></tfoot></table>`;
 }
 
+let PAGES=null;
 function renderAb(ab){
   const sec=document.getElementById('ab-section');
   if(ab===undefined){sec.hidden=true;return}
@@ -319,7 +361,7 @@ function renderAb(ab){
       :`<strong>Pas encore de gagnant</strong> : ${t.leader} est devant${esc(up)} mais l'écart peut encore être dû au hasard.<span class="muted">p = ${t.pValue.toFixed(3)} : il faut descendre sous 0,05 pour conclure.</span>`;
   } else v.textContent='';
   el.innerHTML=`<table><thead><tr><th>Variante</th><th>Visites</th><th>Inscriptions</th><th>Taux de conversion</th></tr></thead><tbody>
-  ${ab.variants.map(x=>`<tr class="${t&&t.significant&&t.leader===x.variant?'lead':''}"><td>Variante ${esc(x.variant)}</td><td>${int(x.visits)}</td><td>${int(x.signups)}</td><td>${pct(x.rate)}</td></tr>`).join('')}
+  ${ab.variants.map(x=>`<tr class="${t&&t.significant&&t.leader===x.variant?'lead':''}"><td>${PAGES&&PAGES[x.variant]?`<a href="${esc(PAGES[x.variant])}" target="_blank" rel="noopener">Version ${esc(x.variant)}</a>`:'Version '+esc(x.variant)}</td><td>${int(x.visits)}</td><td>${int(x.signups)}</td><td>${pct(x.rate)}</td></tr>`).join('')}
   </tbody></table>`;
 }
 
@@ -341,6 +383,10 @@ document.getElementById('btn').addEventListener('click',e=>{
   load(freeze);
 });
 load(false);
+fetch('/api/challenges',{method:'HEAD',cache:'no-store'}).then(r=>{if(r.status===403){
+  document.getElementById('back').closest('.brand').hidden=true;
+  document.body.classList.add('limited');
+}}).catch(()=>{});
 </script>
 </body>
 </html>
