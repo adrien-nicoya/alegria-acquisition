@@ -341,7 +341,7 @@ function renderEmails(list){
   if(!list.length){el.innerHTML='<div class="empty">Aucun email envoyé pour ce challenge pour l’instant.</div>';return}
   const t=list.reduce((a,e)=>({sent:a.sent+e.sent,del:a.del+e.delivered,sig:a.sig+(e.signups||0),op:a.op+(e.uniqueOpens??(e.openRate||0)*e.delivered),cl:a.cl+(e.uniqueClicks??(e.clickRate||0)*e.delivered)}),{sent:0,del:0,sig:0,op:0,cl:0});
   el.innerHTML=`<table><thead><tr><th>Email</th><th>Objet</th><th>Envoyés</th><th>Délivrés</th><th>Délivrabilité</th><th>Ouverture</th><th>Clics</th><th>Inscriptions</th></tr></thead><tbody>
-  ${list.map(e=>`<tr><td>${e.number!=null?'Email n°'+e.number:esc(e.name)}</td><td class="subj">${esc(e.subject||'—')}<small>${esc(e.name)} · ${new Date(e.sentAt).toLocaleDateString('fr-FR',{day:'numeric',month:'short'})}</small></td>
+  ${list.map(e=>`<tr><td>${e.number!=null?'Email n°'+e.number:esc(e.name)}</td><td class="subj">${esc(e.subject||'—')}<small>${esc(e.name)} · ${new Date(e.sentAt).toLocaleDateString('fr-FR',{day:'numeric',month:'short'})}${e.sending?' · envoi en cours':''}</small></td>
     <td>${int(e.sent)}</td><td>${int(e.delivered)}</td><td>${pct(e.deliverability)}</td><td>${pct(e.openRate)}</td><td>${pct(e.clickRate)}</td><td${e.sameDay?' title="Même jour qu’un email précédent : inscrits comptés sur ce dernier"':''}>${e.signups==null?(e.sameDay?'↑':'—'):int(e.signups)}</td></tr>`).join('')}
   </tbody><tfoot><tr><td>Total</td><td>${list.length} emails · taux moyens pondérés</td><td>${int(t.sent)}</td><td>${int(t.del)}</td><td>${pct(t.sent?t.del/t.sent:null)}</td><td>${pct(t.del?t.op/t.del:null)}</td><td>${pct(t.del?t.cl/t.del:null)}</td><td>${int(t.sig)}</td></tr></tfoot></table>`;
 }
