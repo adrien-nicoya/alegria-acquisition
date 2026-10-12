@@ -119,6 +119,10 @@ td.subj small{display:block;color:var(--muted);font-size:12px}
 td a{color:var(--blue-dark);font-weight:600}
 tfoot td{font-weight:700;border-bottom:0;background:var(--blue-light)}
 .empty{color:var(--muted);padding:18px}
+.ab-title{font-size:15px;font-weight:600;margin:0 0 4px}
+.ab-period{color:var(--muted);font-size:13px;margin:0 0 10px}
+.ab-past{margin-top:18px;border-top:1px solid var(--line);padding-top:12px}
+.ab-past>summary{cursor:pointer;font-weight:600;font-size:14px;color:var(--muted);margin-bottom:10px}
 .ab-verdict{margin:0 0 14px;font-size:15px}
 .ab-verdict strong{font-weight:700}
 .ab-verdict .muted{color:var(--muted);font-size:13px;display:block;margin-top:2px}
@@ -170,8 +174,7 @@ tr.lead td:first-child{font-weight:700;color:var(--blue-dark)}
 
   <section aria-labelledby="h-ab" id="ab-section" hidden>
     <h2 id="h-ab">A/B test page d'inscription<span class="sub">source PostHog</span></h2>
-    <div class="ab-verdict" id="ab-verdict"></div>
-    <div class="table" id="ab"></div>
+    <div id="ab"></div>
   </section>
 
   <section aria-labelledby="h-mail">
@@ -347,22 +350,32 @@ function renderEmails(list){
 }
 
 let PAGES=null;
+function abBlock(ab){
+  const t=ab.test, when=d=>new Date(d.length<=10?d+'T00:00:00':d).toLocaleString('fr-FR',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+  const period=ab.until?`Du ${when(ab.since)} au ${when(ab.until)}`:`Depuis le ${when(ab.since)}`;
+  if(!ab.variants.length) return `<p class="ab-period">${period}</p><div class="table"><div class="empty">Pas encore de données PostHog sur la période.</div></div>`;
+  let verdict='';
+  if(t&&t.leader){
+    const up=t.uplift==null?'':` (${t.uplift>=0?'+':''}${pct(t.uplift)} pour ${t.challenger} vs ${t.ref})`;
+    verdict=t.significant
+      ?`<strong>La version ${esc(t.leader)} convertit mieux${esc(up)}</strong>, écart statistiquement fiable.<span class="muted">p = ${t.pValue.toFixed(3)} : moins de 5 % de chances que l'écart soit dû au hasard.</span>`
+      :`<strong>Pas encore de gagnant</strong> : ${esc(t.leader)} est devant${esc(up)} mais l'écart peut encore être dû au hasard.<span class="muted">p = ${t.pValue.toFixed(3)} : il faut descendre sous 0,05 pour conclure.</span>`;
+  }
+  return `<p class="ab-period">${period}</p><div class="ab-verdict">${verdict}</div>
+  <div class="table"><table><thead><tr><th>Variante</th><th>Visites</th><th>Inscriptions</th><th>Taux de conversion</th></tr></thead><tbody>
+  ${ab.variants.map(x=>`<tr class="${t&&t.significant&&t.leader===x.variant?'lead':''}"><td>${PAGES&&PAGES[x.variant]?`<a href="${esc(PAGES[x.variant])}" target="_blank" rel="noopener">Version ${esc(x.variant)}</a>`:'Version '+esc(x.variant)}</td><td>${int(x.visits)}</td><td>${int(x.signups)}</td><td>${pct(x.rate)}</td></tr>`).join('')}
+  </tbody></table></div>`;
+}
 function renderAb(ab){
   const sec=document.getElementById('ab-section');
   if(ab===undefined){sec.hidden=true;return}
   sec.hidden=false;
-  const el=document.getElementById('ab'), v=document.getElementById('ab-verdict');
-  if(!ab||!ab.variants.length){v.textContent='';el.innerHTML='<div class="empty">Pas encore de données PostHog sur la période.</div>';return}
-  const t=ab.test;
-  if(t&&t.leader){
-    const up=t.uplift==null?'':` (${t.uplift>=0?'+':''}${pct(t.uplift)} pour B vs A)`;
-    v.innerHTML=t.significant
-      ?`<strong>La variante ${t.leader} convertit mieux${esc(up)}</strong>, écart statistiquement fiable.<span class="muted">p = ${t.pValue.toFixed(3)} : moins de 5 % de chances que l'écart soit dû au hasard.</span>`
-      :`<strong>Pas encore de gagnant</strong> : ${t.leader} est devant${esc(up)} mais l'écart peut encore être dû au hasard.<span class="muted">p = ${t.pValue.toFixed(3)} : il faut descendre sous 0,05 pour conclure.</span>`;
-  } else v.textContent='';
-  el.innerHTML=`<table><thead><tr><th>Variante</th><th>Visites</th><th>Inscriptions</th><th>Taux de conversion</th></tr></thead><tbody>
-  ${ab.variants.map(x=>`<tr class="${t&&t.significant&&t.leader===x.variant?'lead':''}"><td>${PAGES&&PAGES[x.variant]?`<a href="${esc(PAGES[x.variant])}" target="_blank" rel="noopener">Version ${esc(x.variant)}</a>`:'Version '+esc(x.variant)}</td><td>${int(x.visits)}</td><td>${int(x.signups)}</td><td>${pct(x.rate)}</td></tr>`).join('')}
-  </tbody></table>`;
+  const el=document.getElementById('ab');
+  if(!ab){el.innerHTML='<div class="table"><div class="empty">Pas encore de données PostHog sur la période.</div></div>';return}
+  const list=Array.isArray(ab)?ab:[{...ab,label:'A vs B',since:'',current:true}];
+  const cur=list.filter(x=>x.current), past=list.filter(x=>!x.current);
+  el.innerHTML=cur.map(x=>`<h3 class="ab-title">Test en cours : ${esc(x.label)}</h3>${x.since?abBlock(x):''}`).join('')
+    +past.map(x=>`<details class="ab-past"><summary>Test terminé : ${esc(x.label)}</summary>${abBlock(x)}</details>`).join('');
 }
 
 const CID=new URLSearchParams(location.search).get('c')||'';
