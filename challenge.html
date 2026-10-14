@@ -250,12 +250,12 @@ function sourceLines(c){
     return out;
   }
   if(c.key==='EMAIL'){
-    const numbered=src.filter(x=>/^\d+$/.test(x.key||''));
+    const numbered=src.filter(x=>/^\d+[a-z]*$/.test(x.key||''));
     if(numbered.length) src=numbered; // sans sous-source / autres = tests
     return src.map(x=>{
-      if(!/^\d+$/.test(x.key||'')) return x;
+      if(!/^\d+[a-z]*$/.test(x.key||'')) return x;
       const e=EMAILS_BY_NUM[x.key];
-      return {name:`Email n°${x.key}`+(e?` · ${new Date(e.sentAt).toLocaleDateString('fr-FR',{day:'numeric',month:'short'})}`:''),count:x.count,num:+x.key};
+      return {name:`Email n°${x.key}`+(e?` · ${new Date(e.sentAt).toLocaleDateString('fr-FR',{day:'numeric',month:'short'})}`:''),count:x.count,num:parseInt(x.key,10)+(/\D/.test(x.key)?.5:0)};
     }).sort((a,b)=>(a.num??999)-(b.num??999));
   }
   return src;
