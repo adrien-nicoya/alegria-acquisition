@@ -354,16 +354,21 @@ function abBlock(ab){
   const t=ab.test, when=d=>new Date(d.length<=10?d+'T00:00:00':d).toLocaleString('fr-FR',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
   const period=ab.until?`Du ${when(ab.since)} au ${when(ab.until)}`:`Depuis le ${when(ab.since)}`;
   if(!ab.variants.length) return `<p class="ab-period">${period}</p><div class="table"><div class="empty">Pas encore de données PostHog sur la période.</div></div>`;
+  const cmp=Object.fromEntries(((t&&t.comparisons)||[]).map(c=>[c.variant,c]));
+  const multi=((t&&t.comparisons)||[]).length>1, seuil=t?String(+(t.alpha||.05).toFixed(4)).replace('.',','):'0,05';
   let verdict='';
-  if(t&&t.leader){
-    const up=t.uplift==null?'':` (${t.uplift>=0?'+':''}${pct(t.uplift)} pour ${t.challenger} vs ${t.ref})`;
+  if(t){
+    const up=t.leader!==t.ref&&t.uplift!=null?` (${t.uplift>=0?'+':''}${pct(t.uplift)} vs ${esc(t.ref)})`:'';
+    const what=t.leader===t.ref?`La version ${esc(t.ref)} (référence) convertit mieux que ${multi?'toutes les autres':'l\'autre version'}`:`La version ${esc(t.leader)} convertit mieux${up}`;
     verdict=t.significant
-      ?`<strong>La version ${esc(t.leader)} convertit mieux${esc(up)}</strong>, écart statistiquement fiable.<span class="muted">p = ${t.pValue.toFixed(3)} : moins de 5 % de chances que l'écart soit dû au hasard.</span>`
-      :`<strong>Pas encore de gagnant</strong> : ${esc(t.leader)} est devant${esc(up)} mais l'écart peut encore être dû au hasard.<span class="muted">p = ${t.pValue.toFixed(3)} : il faut descendre sous 0,05 pour conclure.</span>`;
+      ?`<strong>${what}</strong>, écart statistiquement fiable.<span class="muted">Seuil de fiabilité : p &lt; ${seuil}${multi?' (corrigé car plusieurs versions sont comparées)':''}.</span>`
+      :`<strong>Pas encore de gagnant</strong> : ${esc(t.leader)} est devant${up} mais l'écart peut encore être dû au hasard.<span class="muted">Il faut descendre sous p = ${seuil}${multi?' (seuil corrigé car plusieurs versions sont comparées)':''} pour conclure.</span>`;
   }
+  const refName=t?t.ref:null;
   return `<p class="ab-period">${period}</p><div class="ab-verdict">${verdict}</div>
-  <div class="table"><table><thead><tr><th>Variante</th><th>Visites</th><th>Inscriptions</th><th>Taux de conversion</th></tr></thead><tbody>
-  ${ab.variants.map(x=>`<tr class="${t&&t.significant&&t.leader===x.variant?'lead':''}"><td>${PAGES&&PAGES[x.variant]?`<a href="${esc(PAGES[x.variant])}" target="_blank" rel="noopener">Version ${esc(x.variant)}</a>`:'Version '+esc(x.variant)}</td><td>${int(x.visits)}</td><td>${int(x.signups)}</td><td>${pct(x.rate)}</td></tr>`).join('')}
+  <div class="table"><table><thead><tr><th>Variante</th><th>Visites</th><th>Inscriptions</th><th>Taux de conversion</th><th>Écart vs ${esc(refName||'référence')}</th></tr></thead><tbody>
+  ${ab.variants.map(x=>{const c=cmp[x.variant];return `<tr class="${t&&t.significant&&t.leader===x.variant?'lead':''}"><td>${PAGES&&PAGES[x.variant]?`<a href="${esc(PAGES[x.variant])}" target="_blank" rel="noopener">Version ${esc(x.variant)}</a>`:'Version '+esc(x.variant)}</td><td>${int(x.visits)}</td><td>${int(x.signups)}</td><td>${pct(x.rate)}</td>
+    <td>${x.variant===refName?'Référence':c&&c.uplift!=null?`${c.uplift>=0?'+':''}${pct(c.uplift)}${c.significant?' · fiable':''}`:'–'}</td></tr>`}).join('')}
   </tbody></table></div>`;
 }
 function renderAb(ab){
