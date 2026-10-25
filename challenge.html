@@ -249,17 +249,21 @@ function sourceLines(c){
     }
     return out;
   }
-  if(c.key==='EMAIL'){
-    const numbered=src.filter(x=>/^\d+[a-z]*$/.test(x.key||''));
+    if(c.key==='EMAIL'){
+    const isNum=x=>/^\d+[a-z]*$/.test(x.key||'');
+    const numbered=src.filter(isNum);
     if(numbered.length) src=numbered; // sans sous-source / autres = tests
-    return src.map(x=>{
-      if(!/^\d+[a-z]*$/.test(x.key||'')) return x;
+    // Emails numérotés sans campagne correspondante dans ce challenge = anciens emails.
+    const known=src.filter(x=>!isNum(x)||EMAILS_BY_NUM[x.key]), old=src.filter(x=>isNum(x)&&!EMAILS_BY_NUM[x.key]);
+    const lines=known.map(x=>{
+      if(!isNum(x)) return x;
       const e=EMAILS_BY_NUM[x.key];
-      return {name:`Email n°${x.key}`+(e?` · ${new Date(e.sentAt).toLocaleDateString('fr-FR',{day:'numeric',month:'short'})}`:''),count:x.count,num:parseInt(x.key,10)+(/\D/.test(x.key)?.5:0)};
+      return {name:`Email n°${x.key} · ${new Date(e.sentAt).toLocaleDateString('fr-FR',{day:'numeric',month:'short'})}`,count:x.count,num:parseInt(x.key,10)+(/\D/.test(x.key)?.5:0)};
     }).sort((a,b)=>(a.num??999)-(b.num??999));
+    const oldCount=old.reduce((a,x)=>a+x.count,0);
+    if(oldCount) lines.push({name:'Old emails',count:oldCount});
+    return lines;
   }
-  return src;
-}
 
 function renderSignups(s,targets){
   const goalEl=document.getElementById('total-goal');
