@@ -249,7 +249,7 @@ function sourceLines(c){
     }
     return out;
   }
-    if(c.key==='EMAIL'){
+  if(c.key==='EMAIL'){
     const isNum=x=>/^\d+[a-z]*$/.test(x.key||'');
     const numbered=src.filter(isNum);
     if(numbered.length) src=numbered; // sans sous-source / autres = tests
@@ -264,6 +264,8 @@ function sourceLines(c){
     if(oldCount) lines.push({name:'Old emails',count:oldCount});
     return lines;
   }
+  return src;
+}
 
 function renderSignups(s,targets){
   const goalEl=document.getElementById('total-goal');
