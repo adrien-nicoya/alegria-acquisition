@@ -254,13 +254,14 @@ function sourceLines(c){
     const numbered=src.filter(isNum);
     if(numbered.length) src=numbered; // sans sous-source / autres = tests
     // Emails numérotés sans campagne correspondante dans ce challenge = anciens emails.
-    const known=src.filter(x=>!isNum(x)||EMAILS_BY_NUM[x.key]), old=src.filter(x=>isNum(x)&&!EMAILS_BY_NUM[x.key]);
+    const known=src.filter(x=>!isNum(x)||EMAILS_BY_NUM[x.key]);
     const lines=known.map(x=>{
       if(!isNum(x)) return x;
       const e=EMAILS_BY_NUM[x.key];
       return {name:`Email n°${x.key} · ${new Date(e.sentAt).toLocaleDateString('fr-FR',{day:'numeric',month:'short'})}`,count:x.count,num:parseInt(x.key,10)+(/\D/.test(x.key)?.5:0)};
     }).sort((a,b)=>(a.num??999)-(b.num??999));
-    const oldCount=old.reduce((a,x)=>a+x.count,0);
+    // Tout ce qui n'est pas un email de ce challenge (anciens emails, tests, sans sous-source).
+    const oldCount=Math.max(0,c.total-lines.reduce((a,x)=>a+x.count,0));
     if(oldCount) lines.push({name:'Old emails',count:oldCount});
     return lines;
   }
