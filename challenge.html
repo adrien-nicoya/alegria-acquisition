@@ -12,7 +12,7 @@
 :root{
   --paper:#f6f8fc; --surface:#ffffff; --ink:#0f1a3d; --muted:#5d6885; --line:#dfe5f1;
   --blue:#3b82f6; --blue-dark:#1e40af; --blue-light:#eff6ff;
-  --c-meta:#2563eb; --c-organique:#0d9488; --c-email:#d97706; --c-youtube:#dc2626; --c-affiliation:#7c3aed; --c-other:#94a3b8;
+  --c-meta:#2563eb; --c-organique:#0d9488; --c-email:#d97706; --c-youtube:#dc2626; --c-affiliation:#7c3aed; --c-parrainage:#db2777; --c-other:#94a3b8;
   --warn-bg:#fff7e6; --warn-ink:#7a4b00;
   color-scheme:light;
   box-sizing:border-box;
@@ -184,7 +184,7 @@ tr.lead td:first-child{font-weight:700;color:var(--blue-dark)}
 </div>
 
 <script>
-const COLORS={META:'--c-meta',ORGANIQUE:'--c-organique',EMAIL:'--c-email',YOUTUBE:'--c-youtube',AFFILIATION:'--c-affiliation'};
+const COLORS={META:'--c-meta',ORGANIQUE:'--c-organique',EMAIL:'--c-email',YOUTUBE:'--c-youtube',AFFILIATION:'--c-affiliation',PARRAINAGE:'--c-parrainage'};
 const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
 const nf=new Intl.NumberFormat('fr-FR');
 const eur=(n,d=2)=>n==null?'–':n.toLocaleString('fr-FR',{style:'currency',currency:'EUR',minimumFractionDigits:d,maximumFractionDigits:d});
@@ -232,7 +232,7 @@ function render(d){
   renderSignups(d.signups,(d.challenge||{}).targets); drawSignups(d.signupsDaily,(d.challenge||{}).targets); renderMeta(d.meta); PAGES=(d.challenge||{}).abPages||null; renderAb(d.abtest); renderEmails(d.emails);
 }
 
-const LABELS={META:'Meta',YOUTUBE:'YouTube Ads',ORGANIQUE:'Organique',EMAIL:'Emailing',AFFILIATION:'Affiliation'};
+const LABELS={META:'Meta',YOUTUBE:'YouTube Ads',ORGANIQUE:'Organique',EMAIL:'Emailing',AFFILIATION:'Affiliation',PARRAINAGE:'Parrainage'};
 const CH_ORDER=['META'];
 let EMAILS_BY_NUM={};
 
